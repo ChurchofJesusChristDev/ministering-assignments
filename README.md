@@ -116,6 +116,31 @@ async function getCard(id) {
 }
 ```
 
+### Formatting the Email
+
+TODO
+
+### Sending the Email
+
+```js
+fetch("https://lcr.churchofjesuschrist.org/services/leader-messaging/send-message?lang=eng", {
+  "headers": {
+    "accept": "application/json, text/plain, */*",
+    "content-type": "application/json;charset=UTF-8"
+  },
+  "credentials": "include",
+  "method": "POST",
+  "body": JSON.stringify({
+    lang: 'eng',
+    recipients: [ 6442075755 ],
+    allowReplyAll: false,
+    subject: "[Test] You're a Wizard Harry!",
+    messageBody: 'Harry! You've been accepted to Hogwarts School Stake.',
+    type: 'EQ'
+  })
+});
+```
+
 ## Shape of Data
 
 The JSON is over 1MB, so to examine it quickly I used Matt's JSON-to-Go, and I cut out `translations`, as that accounted for about 75% of the entire structure.
