@@ -27,6 +27,95 @@ data.props.pageProps.initialState.ministeringData.elders[0].companionships[0].mi
 data.props.pageProps.initialState.ministeringData.elders[0].companionships[0].assignments[0].legacyCmisId
 ```
 
+### Getting all the data
+
+This will put all person info in `cards` and all companionship info in `people`.
+
+```js
+var cards = {};
+var data = JSON.parse($('script[type="application/json"]').innerText);
+var ids = {};
+var people = {};
+
+function getPerson(id) {
+  if (!people[id]) {
+    ids[id] = true;
+    people[id] = {
+      companions: {},
+      assignments: {},
+      ministers: {},
+    };
+  }
+  return people[id];
+}
+
+function organize() {
+  data.props.pageProps.initialState.ministeringData.elders.forEach(function (
+    district
+  ) {
+    district.companionships.forEach(function (ship, i) {
+      //console.log("companionship", i);
+      // this is a little imperfect for people in multiple companionships, but should work generally
+
+      ship.ministers.forEach(function (m, j) {
+        //console.log("minister", j);
+        ids[m.legacyCmisId] = true;
+
+        var p = getPerson(m.legacyCmisId);
+        if (ship.ministers) {
+          ship.ministers.forEach(function (n) {
+            if (m === n) {
+              return;
+            }
+            p.companions[n.legacyCmisId] = true;
+          });
+        }
+
+        if (ship.assignments) {
+          ship.assignments.forEach(function (a) {
+            var q = getPerson(a.legacyCmisId);
+            q.ministers[m.legacyCmisId] = true;
+
+            p.assignments[a.legacyCmisId] = true;
+            ids[a.legacyCmisId] = true;
+          });
+        }
+      });
+    });
+  });
+}
+
+async function getCards() {
+  for (id in ids) {
+    await getCard(id);
+  }
+}
+
+function getCachedCard(id) {
+  return cards[id];
+}
+
+async function getCard(id) {
+  if (cards[id]) {
+    return cards[id];
+  }
+  //console.log(Object.keys(cards).length, id);
+
+  var cardUrl =
+    `https://lcr.churchofjesuschrist.org/services/member-card` +
+    `?id=${id}&includePriesthood=true&lang=eng&type=INDIVIDUAL`;
+
+  return fetch(cardUrl, {
+    credentials: "same-origin",
+  }).then(function (resp) {
+    return resp.json().then(function (data) {
+      cards[id] = data;
+      return cards[id];
+    });
+  });
+}
+```
+
 ## Shape of Data
 
 The JSON is over 1MB, so to examine it quickly I used Matt's JSON-to-Go, and I cut out `translations`, as that accounted for about 75% of the entire structure.
