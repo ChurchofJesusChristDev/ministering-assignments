@@ -10,7 +10,350 @@ Send a friend email for all assignments with plain-text contact information
 
 https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ&tab=assigned
 
-## Notes
+## How to Send an Email
+
+This part is relatively simple.
+
+Authentication is cookie-based, so no authentication details are provided.
+
+```js
+var message = {
+  lang: 'eng',
+  recipients: [ 1000000001 ],
+  allowReplyAll: false,
+  subject: "[Test] You're a Wizard Harry!",
+  messageBody: 'Harry! You've been accepted to Hogwarts School Stake.',
+  type: 'EQ'
+};
+  
+fetch("https://lcr.churchofjesuschrist.org/services/leader-messaging/send-message?lang=eng", {
+  "headers": {
+    "accept": "application/json, text/plain, */*",
+    "content-type": "application/json;charset=UTF-8"
+  },
+  "credentials": "include",
+  "method": "POST",
+  "body": JSON.stringify(message)
+});
+```
+
+## Get Complete Ministering Assignment Data
+
+This will put all person info in `cards` and all companionship info in `people`.
+
+```js
+var data;
+try {
+    // when running on the page directly
+    data = JSON.parse($('script[type="application/json"]').innerText);
+} catch (e) {
+    data = require("./data.json");
+}
+
+var cards;
+try {
+    cards = require("./cards.json");
+} catch (e) {
+    cards = {};
+}
+
+//var cards = {};
+var ids = {};
+var people = {};
+
+function getPerson(id) {
+    if (!people[id]) {
+        ids[id] = true;
+        people[id] = {
+            companions: {},
+            assignments: {},
+            ministers: {},
+        };
+    }
+    return people[id];
+}
+
+function organize() {
+    data.props.pageProps.initialState.ministeringData.elders.forEach(function (
+        district
+    ) {
+        district.companionships.forEach(function (ship, i) {
+            //console.log("companionship", i);
+            // this is a little imperfect for people in multiple companionships, but should work generally
+
+            ship.ministers.forEach(function (m, j) {
+                //console.log("minister", j);
+                ids[m.legacyCmisId] = true;
+
+                var p = getPerson(m.legacyCmisId);
+                if (ship.ministers) {
+                    ship.ministers.forEach(function (n) {
+                        if (m === n) {
+                            return;
+                        }
+                        p.companions[n.legacyCmisId] = true;
+                    });
+                }
+
+                if (ship.assignments) {
+                    ship.assignments.forEach(function (a) {
+                        var q = getPerson(a.legacyCmisId);
+                        q.ministers[m.legacyCmisId] = true;
+
+                        p.assignments[a.legacyCmisId] = true;
+                        ids[a.legacyCmisId] = true;
+                    });
+                }
+            });
+        });
+    });
+}
+
+async function getCards() {
+    for (id in ids) {
+        await getCard(id);
+    }
+}
+
+function getCachedCard(id) {
+    return cards[id];
+}
+
+async function getCard(id) {
+    if (cards[id]) {
+        return cards[id];
+    }
+    //console.log(Object.keys(cards).length, id);
+
+    var cardUrl =
+        `https://lcr.churchofjesuschrist.org/services/member-card` +
+        `?id=${id}&includePriesthood=true&lang=eng&type=INDIVIDUAL`;
+
+    return fetch(cardUrl, {
+        credentials: "same-origin",
+    }).then(function (resp) {
+        return resp.json().then(function (data) {
+            cards[id] = data;
+            return cards[id];
+        });
+    });
+}
+
+var CJCD = {
+    _data: data,
+    _cards: cards,
+    _people: people,
+    ids: ids,
+    organize: organize,
+    getPerson: getPerson,
+    getCard: getCard,
+    getCards: getCards,
+    getCachedCard: getCachedCard,
+};
+
+if ("undefined" != typeof module) {
+    module.exports = CJCD;
+}
+```
+
+## Templating Emails
+
+This will create an email for everyone who has a ministering assignment and/or is assigned to a set of ministers.
+
+```js
+var CJCD;
+
+if ("undefined" === typeof CJCD) {
+    CJCD = require("./email.js");
+}
+
+var assigneeSubject = "Will you do the Elder's Quorum a Favor?";
+var assigneeMessage = `\n<p>We wanted to let know who your ministers are. Feel free to reach out to them if you ever need to borrow a cup of sugar, or get a ride to the airport. :)\n`;
+
+var ministerSubject = "Updated Assignments: Will you do the Elder's Quorum a Favor?";
+var ministerMessage =
+    `\n<p>We've updated ministering assignments wanted to make sure you have yours. We also have two favors to ask: ` +
+    `\n<p>1. We'd like to ask you to pray for the families you minister to by name today (and often). ` +
+    `\n<p>2. If you haven't heard from your ministers will you do a little reverse ministering and reach out to them? `;
+
+function formatTel(t) {
+    t = (t || "").replace(/\D/g, "").trim();
+
+    if (!t) {
+        return "";
+    }
+
+    if (t.length > 10) {
+        if ("1" !== t[0] || t.length > 11) {
+            console.warn("phone too long:", t);
+        }
+        t = t.slice(-10);
+        //return "";
+    }
+
+    if (t.length < 10) {
+        console.warn("phone too short:", t);
+        t = t.padStart(10, "_");
+        //return "";
+    }
+
+    return `(${t.slice(0, 3)}) ${t.slice(3, 6)}-${t.slice(6, 10)}`;
+}
+
+function formatEmail(name, email) {
+    if (!email || !/@/.test(email)) {
+        return "";
+    }
+    //return `<pre>"${name}" &lt;${email}&gt;,</pre>`;
+    return `${email}`;
+}
+
+function formatCard(c) {
+    return (
+        "<li>" +
+        c.spokenName +
+        " " +
+        c.age +
+        " " +
+        ("FEMALE" === c.gender ? "F" : "M") +
+        "\t" +
+        formatTel(c.individualPhone || c.phone) +
+        "\t" +
+        formatEmail(c.spokenName, c.email) +
+        "</li>\n"
+    );
+}
+
+function helloMinisters(p, c) {
+    var lead = `Hi ${c.spokenName.split(" ").shift()}, \n` + assigneeMessage;
+    return lead;
+}
+
+function helloAssignments(p, c) {
+    var lead = `Hey ${c.spokenName.split(" ").shift()}, \n` + ministerMessage;
+    return lead;
+}
+
+async function createMessages() {
+    CJCD.organize();
+    await CJCD.getCards();
+    return Object.keys(CJCD.ids)
+        .filter(function (id) {
+            var p = CJCD.getPerson(id);
+            var c = CJCD.getCachedCard(id);
+
+            if (!Object.keys(p.assignments)) {
+                console.warn("no assignments", c.spokenName, `(${id})`);
+                return;
+            }
+
+            if (!c.email) {
+                console.warn("no email for", c.spokenName, `(${id})`);
+                return;
+            }
+
+            if (0 === Object.keys(p.ministers).length) {
+                console.warn("no ministers for", c.spokenName, `(${id})`);
+                // pass
+            }
+
+            if (0 === Object.keys(p.companions).length) {
+                console.warn("no companions for", c.spokenName, `(${id})`);
+                // pass
+            }
+
+            if (0 === Object.keys(p.assignments).length) {
+                console.warn("no assignment for", c.spokenName, `(${id})`);
+                // pass
+            }
+
+            return id;
+        })
+        .map(function (id) {
+            var msgs = ['']; // start with a new paragraph
+
+            var p = CJCD.getPerson(id);
+            var c = CJCD.getCachedCard(id);
+	    var isMinister = false;
+
+            if (Object.keys(p.assignments).length) {
+                isMinister = true;
+                let msg = `Who you minister to:<br><ul>\n`;
+                Object.keys(p.assignments).forEach(function (m) {
+                    var assignment = cards[m];
+                    msg += formatCard(assignment);
+                });
+                msg += "</ul>";
+                msgs.push(msg);
+            }
+	    
+            if (Object.keys(p.companions).length > 0) {
+                isMinister = true;
+                let msg = "";
+                if (1 === Object.keys(p.companions).length > 1) {
+                    msg += `Your companion:<br><ul>\n`;
+                } else {
+                    msg += `Your companions:<br><ul>\n`;
+                }
+                Object.keys(p.companions).forEach(function (id) {
+                    var companion = cards[id];
+                    msg += formatCard(companion);
+                });
+                msg += "</ul>";
+                msgs.push(msg);
+            }
+
+            if (Object.keys(p.ministers).length > 0) {
+                let msg = `Your ministers:<br><ul>\n`;
+                Object.keys(p.ministers).forEach(function (id) {
+                    var minister = cards[id];
+                    msg += formatCard(minister);
+                });
+                msg += "</ul>";
+                msgs.push(msg);
+            }
+
+            if (!msgs.length) {
+                console.error("[SANITY] Impossible!", id, "does not exist!");
+                return;
+            }
+
+            // recipients: [ id ]
+
+            var lead;
+            if (
+                "MALE" !== c.gender ||
+                (0 === Object.keys(p.assignments).length &&
+                    0 === Object.keys(p.companions).length)
+            ) {
+                lead = helloMinisters(p, c);
+            } else {
+                lead = helloAssignments(p, c);
+            }
+
+            var body = lead + msgs.join("\n<p>") + "\n\n";
+
+            var data = {
+                lang: "eng",
+                allowReplyAll: false,
+                recipients: [parseInt(id, 10)],
+                subject: isMinister && ministerSubject || assigneeSubject,
+                messageBody: body,
+                type: "EQ",
+            };
+
+            console.log({
+                body: JSON.stringify(data),
+            });
+
+            return data;
+        });
+}
+
+var messages = createMessages();
+```
+
+## Getting the Data from the HTML
 
 ```js
 var data = JSON.parse($('script[type="application/json"]').innerText);
@@ -25,120 +368,6 @@ data.props.pageProps.initialState.ministeringData.elders[0].supervisorName
 data.props.pageProps.initialState.ministeringData.elders[0].companionships[0].ministers[0].legacyCmisId
 // Individual ID, but no contact info
 data.props.pageProps.initialState.ministeringData.elders[0].companionships[0].assignments[0].legacyCmisId
-```
-
-### Getting all the data
-
-This will put all person info in `cards` and all companionship info in `people`.
-
-```js
-var cards = {};
-var data = JSON.parse($('script[type="application/json"]').innerText);
-var ids = {};
-var people = {};
-
-function getPerson(id) {
-  if (!people[id]) {
-    ids[id] = true;
-    people[id] = {
-      companions: {},
-      assignments: {},
-      ministers: {},
-    };
-  }
-  return people[id];
-}
-
-function organize() {
-  data.props.pageProps.initialState.ministeringData.elders.forEach(function (
-    district
-  ) {
-    district.companionships.forEach(function (ship, i) {
-      //console.log("companionship", i);
-      // this is a little imperfect for people in multiple companionships, but should work generally
-
-      ship.ministers.forEach(function (m, j) {
-        //console.log("minister", j);
-        ids[m.legacyCmisId] = true;
-
-        var p = getPerson(m.legacyCmisId);
-        if (ship.ministers) {
-          ship.ministers.forEach(function (n) {
-            if (m === n) {
-              return;
-            }
-            p.companions[n.legacyCmisId] = true;
-          });
-        }
-
-        if (ship.assignments) {
-          ship.assignments.forEach(function (a) {
-            var q = getPerson(a.legacyCmisId);
-            q.ministers[m.legacyCmisId] = true;
-
-            p.assignments[a.legacyCmisId] = true;
-            ids[a.legacyCmisId] = true;
-          });
-        }
-      });
-    });
-  });
-}
-
-async function getCards() {
-  for (id in ids) {
-    await getCard(id);
-  }
-}
-
-function getCachedCard(id) {
-  return cards[id];
-}
-
-async function getCard(id) {
-  if (cards[id]) {
-    return cards[id];
-  }
-  //console.log(Object.keys(cards).length, id);
-
-  var cardUrl =
-    `https://lcr.churchofjesuschrist.org/services/member-card` +
-    `?id=${id}&includePriesthood=true&lang=eng&type=INDIVIDUAL`;
-
-  return fetch(cardUrl, {
-    credentials: "same-origin",
-  }).then(function (resp) {
-    return resp.json().then(function (data) {
-      cards[id] = data;
-      return cards[id];
-    });
-  });
-}
-```
-
-### Formatting the Email
-
-TODO
-
-### Sending the Email
-
-```js
-fetch("https://lcr.churchofjesuschrist.org/services/leader-messaging/send-message?lang=eng", {
-  "headers": {
-    "accept": "application/json, text/plain, */*",
-    "content-type": "application/json;charset=UTF-8"
-  },
-  "credentials": "include",
-  "method": "POST",
-  "body": JSON.stringify({
-    lang: 'eng',
-    recipients: [ 6442075755 ],
-    allowReplyAll: false,
-    subject: "[Test] You're a Wizard Harry!",
-    messageBody: 'Harry! You've been accepted to Hogwarts School Stake.',
-    type: 'EQ'
-  })
-});
 ```
 
 ## Shape of Data
