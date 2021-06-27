@@ -10,6 +10,16 @@ Send a friend email for all assignments with plain-text contact information
 
 https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ&tab=assigned
 
+## Overview
+
+Here's the step-by-step overview:
+
+1. "Scrape" the ministering assignment data from the JSON "script" tag in the HTML
+2. Transform that data from the format used for page layout to a more generally useful format
+3. Fetch the missing person information (phone numbers, email, address) from the `card` API
+4. Template the complete data set as you wish to display it in print or email
+5. Send the batch of emails, one API call per each
+
 ## How to Send an Email
 
 This part is relatively simple.
@@ -17,139 +27,347 @@ This part is relatively simple.
 Authentication is cookie-based, so no authentication details are provided.
 
 ```js
+async function sendEmail(message) {
+  return fetch("https://lcr.churchofjesuschrist.org/services/leader-messaging/send-message?lang=eng", {
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "content-type": "application/json;charset=UTF-8"
+    },
+    "credentials": "include",
+    "method": "POST",
+    "body": JSON.stringify(message, null, 2)
+  });
+}
+```
+
+```js
 var message = {
   lang: 'eng',
   recipients: [ 1000000001 ],
   allowReplyAll: false,
   subject: "[Test] You're a Wizard Harry!",
-  messageBody: 'Harry! You've been accepted to Hogwarts School Stake.',
+  messageBody: 'Harry! You've been accepted to Hogwarts School Stake.",
   type: 'EQ'
 };
-  
-fetch("https://lcr.churchofjesuschrist.org/services/leader-messaging/send-message?lang=eng", {
-  "headers": {
-    "accept": "application/json, text/plain, */*",
-    "content-type": "application/json;charset=UTF-8"
-  },
-  "credentials": "include",
-  "method": "POST",
-  "body": JSON.stringify(message)
-});
+
+sendEmail(message);
 ```
 
+## Getting the Data from the HTML
+
+Unfortunately, it doesn't seem possible to get the JSON you need from the API.
+
+Instead, you have to get it from a JSON object stored in a quasi "script tag".
+
+```js
+var data = JSON.parse($('script[type="application/json"]').innerText);
+```
+
+The format of the data in the HTML isn't ideal, but it's workable. Here's an abreviated view:
+
+```js
+{
+  "props": {
+    "pageProps": {
+      "initialState": {
+        "ministeringData": {
+	
+	  //
+	  // misnomer: these are districts
+	  //
+          "elders": [
+            {
+              "districtName": "District 1",
+              "districtUuid": "50000000-0000-4000-8000-000000000001",
+     	      "supervisorName": "Black, Sirius",
+              "supervisorLegacyCmisId": 1000000005,
+              "supervisorPersonUuid": "10000000-0000-4000-8000-000000000005",
+	      
+	      "companionships": [
+	        "id": "60000000-0000-4000-8000-000000000001",
+		
+		"ministers": [
+                  {
+                    "personUuid": "10000000-0000-4000-8000-000000000003",
+                    "legacyCmisId": 1000000003,
+                    "name": "Weasley, Ronald",
+                    "nameOrder": 2,
+                    "email": "ron.b.weasley@example.com",
+                    "interviews": [
+                      {
+                        "id": "A0000000-0000-4000-8000-000000000001",
+                        "date": "2020-03-01T00:00:00.000",
+                        "timestamp": "2020-03-01T06:00:00.000+0000"
+                      }
+		    ],
+                    "youthBasedOnAge": false
+		  }
+		],
+		
+		"assignments": [
+                  {
+		    //
+		    // misnomer: this refers to head of household, as the family identifier
+		    //
+                    "personUuid": "10000000-0000-4000-8000-000000000001",
+                    "legacyCmisId": 1000000001,
+                    "name": "Potter, Harry James & Ginevra Molly",
+                    "nameOrder": 1,
+                    "youthBasedOnAge": false
+                  }
+		],
+		
+                "recentlyChangedDate": "2021-06-01T06:00:00.000+0000",
+                "recentlyChangedDateInMilliseconds": 1622527200000
+	      ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Take a look at the [Full Data Shape](https://github.com/ChurchofJesusChristDev/send-ministering-assignments/#shape-of-data) for more detail.
+
+And this is how you can access it
+
+```js
+// Misnomer, these are Ministering Districts
+data.props.pageProps.initialState.ministeringData.elders
+
+// Sadly, no ID
+data.props.pageProps.initialState.ministeringData.elders[0].supervisorName
+
+// Individual ID and email, but no phone number
+data.props.pageProps.initialState.ministeringData.elders[0].companionships[0].ministers[0].legacyCmisId
+// Individual ID, but no contact info
+data.props.pageProps.initialState.ministeringData.elders[0].companionships[0].assignments[0].legacyCmisId
+```
+
+If we want to omit the most garbage and get the most useful data only:
+
+```js
+console.log(
+  JSON.stringify(
+    {
+      props: { 
+        pageProps: { 
+          initialState: { 
+            ministeringData: {
+              elders: data.props.pageProps.initialState.ministeringData.elders
+            }
+          } 
+        }
+      }
+    },
+    null,
+    2
+  )
+);
+```
+
+You can then save that to a file and use it as a cache.
+
 ## Get Complete Ministering Assignment Data
+
+```js
+// load companionship data and card cache, if any
+CJCD.init(data, cards || {});
+
+// transform the data into an individual-oriented format
+CJCD.organize();
+
+// get the missing information from card API
+await CJCD.getCards();
+
+var assignments = CJCD.toJSON();
+```
+
+`assignments` will look like this:
+
+```js
+[
+  {
+    "member": {
+      "nickname": "",
+      "given_name": "",
+      "family_name": "",
+      "phone": "",
+      "email": "",
+      "address": "",
+      "district": ""
+    },
+    "companions": [],
+    "assignments": [],
+    "ministers": []
+  }
+]
+```
+
+If you want to get the card values to save them for local caching:
+
+```js
+console.log(JSON.stringify(CJCD._cards, null, 2));
+```
 
 This will put all person info in `cards` and all companionship info in `people`.
 
 ```js
-var data;
-try {
-    // when running on the page directly
-    data = JSON.parse($('script[type="application/json"]').innerText);
-} catch (e) {
-    data = require("./data.json");
-}
+var CJCD;
 
-var cards;
-try {
-    cards = require("./cards.json");
-} catch (e) {
-    cards = {};
-}
+CJCD = (function () {
+    var ids = {};
+    var people = {};
 
-//var cards = {};
-var ids = {};
-var people = {};
-
-function getPerson(id) {
-    if (!people[id]) {
-        ids[id] = true;
-        people[id] = {
-            companions: {},
-            assignments: {},
-            ministers: {},
-        };
+    function getPerson(id) {
+        if (!people[id]) {
+            ids[id] = true;
+            people[id] = {
+                companions: {},
+                assignments: {},
+                ministers: {},
+            };
+        }
+        return people[id];
     }
-    return people[id];
-}
 
-function organize() {
-    data.props.pageProps.initialState.ministeringData.elders.forEach(function (
-        district
-    ) {
-        district.companionships.forEach(function (ship, i) {
-            //console.log("companionship", i);
-            // this is a little imperfect for people in multiple companionships, but should work generally
+    function organize() {
+        CJCD._data.props.pageProps.initialState.ministeringData.elders.forEach(
+            function (district) {
+                district.companionships.forEach(function (ship, i) {
+                    //console.log("companionship", i);
+                    // this is a little imperfect for people in multiple companionships, but should work generally
 
-            ship.ministers.forEach(function (m, j) {
-                //console.log("minister", j);
-                ids[m.legacyCmisId] = true;
+                    ship.ministers.forEach(function (m, j) {
+                        //console.log("minister", j);
+                        ids[m.legacyCmisId] = true;
 
-                var p = getPerson(m.legacyCmisId);
-                if (ship.ministers) {
-                    ship.ministers.forEach(function (n) {
-                        if (m === n) {
-                            return;
+                        var p = getPerson(m.legacyCmisId);
+                        if (ship.ministers) {
+                            ship.ministers.forEach(function (n) {
+                                if (m === n) {
+                                    return;
+                                }
+                                p.companions[n.legacyCmisId] = true;
+                            });
                         }
-                        p.companions[n.legacyCmisId] = true;
-                    });
-                }
 
-                if (ship.assignments) {
-                    ship.assignments.forEach(function (a) {
-                        var q = getPerson(a.legacyCmisId);
-                        q.ministers[m.legacyCmisId] = true;
+                        if (ship.assignments) {
+                            ship.assignments.forEach(function (a) {
+                                var q = getPerson(a.legacyCmisId);
+                                q.ministers[m.legacyCmisId] = true;
 
-                        p.assignments[a.legacyCmisId] = true;
-                        ids[a.legacyCmisId] = true;
+                                p.assignments[a.legacyCmisId] = true;
+                                ids[a.legacyCmisId] = true;
+                            });
+                        }
                     });
-                }
+                });
+            }
+        );
+    }
+
+    async function getCards() {
+        for (id in ids) {
+            await getCard(id);
+        }
+    }
+
+    function getCachedCard(id) {
+        return CJCD._cards[id];
+    }
+
+    async function getCard(id) {
+        if (CJCD._cards[id]) {
+            return CJCD._cards[id];
+        }
+        //console.log(Object.keys(cards).length, id);
+
+        var cardUrl =
+            `https://lcr.churchofjesuschrist.org/services/member-card` +
+            `?id=${id}&includePriesthood=true&lang=eng&type=INDIVIDUAL`;
+
+        return fetch(cardUrl, {
+            credentials: "same-origin",
+        }).then(function (resp) {
+            return resp.json().then(function (data) {
+                CJCD._cards[id] = data;
+                return CJCD._cards[id];
             });
         });
-    });
-}
-
-async function getCards() {
-    for (id in ids) {
-        await getCard(id);
     }
-}
 
-function getCachedCard(id) {
-    return cards[id];
-}
+    function toJSON() {
+        var assignments = [];
+        return Object.keys(CJCD.ids).map(function (id) {
+            var p = CJCD.getPerson(id);
+            var c = CJCD.getCachedCard(id);
+            var isMinister = false;
 
-async function getCard(id) {
-    if (cards[id]) {
-        return cards[id];
-    }
-    //console.log(Object.keys(cards).length, id);
+            var assignment = {
+                member: p, // TODO format member
+                assignments: [],
+                ministers: [],
+                companions: [],
+            };
 
-    var cardUrl =
-        `https://lcr.churchofjesuschrist.org/services/member-card` +
-        `?id=${id}&includePriesthood=true&lang=eng&type=INDIVIDUAL`;
+            if (Object.keys(p.assignments).length) {
+                isMinister = true;
+                assignment.assignments = Object.keys(p.assignments).map(
+                    function (m) {
+                        var family = CJCD.getCachedCard(m);
+                        // TODO format in a reasonable way
+                        return family;
+                    }
+                );
+            }
 
-    return fetch(cardUrl, {
-        credentials: "same-origin",
-    }).then(function (resp) {
-        return resp.json().then(function (data) {
-            cards[id] = data;
-            return cards[id];
+            if (Object.keys(p.companions).length > 0) {
+                isMinister = true;
+                assignment.companions = Object.keys(p.companions).map(function (
+                    id
+                ) {
+                    var companion = CJCD.getCachedCard(id);
+                    // TODO format in a reasonable way
+                    return companion;
+                });
+            }
+
+            if (Object.keys(p.ministers).length > 0) {
+                assignment.ministers = Object.keys(p.ministers).map(function (
+                    id
+                ) {
+                    var minister = CJCD.getCachedCard(id);
+                    // TODO format in a reasonable way
+                    return minister;
+                });
+            }
+
+            return assignment;
         });
-    });
-}
+    }
 
-var CJCD = {
-    _data: data,
-    _cards: cards,
-    _people: people,
-    ids: ids,
-    organize: organize,
-    getPerson: getPerson,
-    getCard: getCard,
-    getCards: getCards,
-    getCachedCard: getCachedCard,
-};
+    return {
+        _data: null,
+        _cards: null,
+        _people: people,
+        ids: ids,
+        init: async function (_data, _cards) {
+            CJCD._data = _data;
+            CJCD._cards = _cards || CJCD._cards || {};
+            CJCD.organize();
+            await CJCD.getCards();
+        },
+        organize: organize,
+        getPerson: getPerson,
+        getCard: getCard,
+        getCards: getCards,
+        getCachedCard: getCachedCard,
+        toJSON: toJSON,
+    };
+})();
 
 if ("undefined" != typeof module) {
     module.exports = CJCD;
@@ -351,23 +569,6 @@ async function createMessages() {
 }
 
 var messages = createMessages();
-```
-
-## Getting the Data from the HTML
-
-```js
-var data = JSON.parse($('script[type="application/json"]').innerText);
-
-// Misnomer, these are Ministering Districts
-data.props.pageProps.initialState.ministeringData.elders
-
-// Sadly, no ID
-data.props.pageProps.initialState.ministeringData.elders[0].supervisorName
-
-// Individual ID and email, but no phone number
-data.props.pageProps.initialState.ministeringData.elders[0].companionships[0].ministers[0].legacyCmisId
-// Individual ID, but no contact info
-data.props.pageProps.initialState.ministeringData.elders[0].companionships[0].assignments[0].legacyCmisId
 ```
 
 ## Shape of Data
