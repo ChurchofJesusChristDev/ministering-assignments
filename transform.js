@@ -83,6 +83,9 @@ CJCD = (function () {
                     // this is a little imperfect for people in multiple companionships, but should work generally
 
                     ship.ministers.forEach(function (m, j) {
+                        // TODO where to put this?
+                        m._district = district.districtName;
+
                         //console.log("minister", j);
                         ids[m.legacyCmisId] = true;
 
