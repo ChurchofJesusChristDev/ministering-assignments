@@ -4,7 +4,7 @@ Send a friend email for all assignments with plain-text contact information
 
 > Most people don't know where to check their ministering assignment,
 > and don't know when it has changed.
-> 
+>
 > We want to periodically send a church email (and eventually texts)
 > showing assignments in a simple way, and with a call to action.
 
@@ -71,7 +71,7 @@ The format of the data in the HTML isn't ideal, but it's workable. Here's an abr
     "pageProps": {
       "initialState": {
         "ministeringData": {
-	
+
 	  //
 	  // misnomer: these are districts
 	  //
@@ -82,10 +82,10 @@ The format of the data in the HTML isn't ideal, but it's workable. Here's an abr
      	      "supervisorName": "Black, Sirius",
               "supervisorLegacyCmisId": 1000000005,
               "supervisorPersonUuid": "10000000-0000-4000-8000-000000000005",
-	      
+
 	      "companionships": [
 	        "id": "60000000-0000-4000-8000-000000000001",
-		
+
 		"ministers": [
                   {
                     "personUuid": "10000000-0000-4000-8000-000000000003",
@@ -103,7 +103,7 @@ The format of the data in the HTML isn't ideal, but it's workable. Here's an abr
                     "youthBasedOnAge": false
 		  }
 		],
-		
+
 		"assignments": [
                   {
 		    //
@@ -116,7 +116,7 @@ The format of the data in the HTML isn't ideal, but it's workable. Here's an abr
                     "youthBasedOnAge": false
                   }
 		],
-		
+
                 "recentlyChangedDate": "2021-06-01T06:00:00.000+0000",
                 "recentlyChangedDateInMilliseconds": 1622527200000
 	      ]
@@ -152,13 +152,13 @@ If we want to omit the most garbage and get the most useful data only:
 console.log(
   JSON.stringify(
     {
-      props: { 
-        pageProps: { 
-          initialState: { 
+      props: {
+        pageProps: {
+          initialState: {
             ministeringData: {
               elders: data.props.pageProps.initialState.ministeringData.elders
             }
-          } 
+          }
         }
       }
     },
@@ -433,7 +433,7 @@ function formatCard(c) {
         " " +
         c.age +
         " " +
-        ("FEMALE" === c.gender ? "F" : "M") +
+        ("FEMALE" === c.gender ? "female" : "male") +
         "\t" +
         formatTel(c.individualPhone || c.phone) +
         "\t" +
@@ -504,7 +504,7 @@ async function createMessages() {
                 msg += "</ul>";
                 msgs.push(msg);
             }
-	    
+
             if (Object.keys(p.companions).length > 0) {
                 isMinister = true;
                 let msg = "";

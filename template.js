@@ -148,7 +148,7 @@ function formatTel(t) {
 }
 
 function formatAddr(addr) {
-    return addr.join("<br>");
+    return ((addr || {}).formatted || []).join("<br>");
 }
 
 // formats the email
@@ -173,7 +173,7 @@ function formatCard(c) {
         &nbsp;&nbsp;
         ${String(c.age)}
         </td><td>
-        ${c.gender}
+        ${"male" === c.gender ? "M" : "F"}
         </td><td>
         &nbsp;&nbsp;
         ${formatTel(c.phone)}
@@ -196,7 +196,7 @@ function formatCard(c) {
         " " +
         c.age +
         " " +
-        ("FEMALE" === c.gender ? "F" : "M") +
+        ("female" === c.gender ? "F" : "M") +
         "\t" +
         formatTel(c.individualPhone || c.phone) +
         "\t" +

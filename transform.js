@@ -54,10 +54,10 @@ CJCD = (function () {
             id: c.id,
             nickname: c.spokenName,
             age: c.age,
-            gender: "FEMALE" === c.gender ? "F" : "M",
+            gender: "FEMALE" === c.gender ? "female" : "male",
             phone: CJCD._formatTel(c.individualPhone || c.phone),
             email: CJCD._formatEmail(c.spokenName, c.email),
-            address: c._address || [],
+            address: c._address || { formatted: [] },
             imageDataUrl: CJCD._images[c.id] || "",
         };
     }
@@ -198,9 +198,11 @@ CJCD = (function () {
 
         CJCD._cards[id]._address = await getProfile(id)
             .then(function (data) {
-                return (
-                    data.individual?.residentialAddress?.formattedLines || []
-                );
+                return {
+                    formatted:
+                        data.individual?.residentialAddress?.formattedLines ||
+                        [],
+                };
             })
             .catch(function () {
                 return [];
