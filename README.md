@@ -8,7 +8,7 @@ Send a friend email for all assignments with plain-text contact information
 > We want to periodically send a church email (and eventually texts)
 > showing assignments in a simple way, and with a call to action.
 
-https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ&tab=assigned
+<https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ&tab=assigned>
 
 ## Overview
 
@@ -19,6 +19,22 @@ Here's the step-by-step overview:
 3. Fetch the missing person information (phone numbers, email, address) from the `card` API
 4. Template the complete data set as you wish to display it in print or email
 5. Send the batch of emails, one API call per each
+
+## Demo
+
+1. Visit _Ministering Assignments_ at <https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ&tab=assigned>.
+2. <kbd>Cmd ⌘</kbd> + <kbd>Alt ⌥</kbd> + <kbd>i<kbd> to open the JavaScript console
+3. Copy and paste this script
+   ```js
+   var script = document.createElement('script');
+   script.src="https://churchofjesuschristdev.github.io/send-ministering-assignments/demo.js";
+   document.body.append(script);
+   ```
+	
+**Security Notice**: Generally speaking it's a bad idea to run scripts from randos on the Internet.
+However, you can view the full contents of that script in this repository, and being that it's
+encrypted with HTTPS, and hosted via Github, you have every reasonable assurance that the script
+is authentically from this repository. :)
 
 ## How to Send an Email
 
