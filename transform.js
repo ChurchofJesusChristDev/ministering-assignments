@@ -146,7 +146,8 @@ CJCD = (function () {
             return CJCD._images[id];
         }
 
-        var profileImageUrl = `https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-household/${id}?lang=eng&type=HOUSEHOLD`;
+        var profileImageUrl = `https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-individual/${id}?lang=eng&addable=false`;
+        //var profileImageUrl = `https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-household/${id}?lang=eng&type=HOUSEHOLD`;
         var tokenUrl = await fetch(profileImageUrl, {
             credentials: "same-origin",
         }).then(async function (resp) {
