@@ -35,8 +35,26 @@
   
   console.info("Ministering Assignments (sensibly organized):");
   console.info(
-    JSON.stringify(CJCD.toJSON(), null, 2)
+    JSON.stringify(CJCD.toJSON(), function (key) {
+      if ('imageDataUrl' === key) {
+        return '';
+      }
+    }, 2)
   );
+  
+  document.body.innerHTML = '<table>' + CJCD.toJSON().map(function (assignment) {
+  return `
+    <tr>
+      <td><img src="${assignment.member.imageDataUrl}" width="100px" /></td>
+      <td>${assignment.member.nickname}</td>
+      <td>${assignment.member.age}</td>
+      <td>${assignment.member.gender}</td>
+      <td>${assignment.member.phone}</td>
+      <td>${assignment.member.email}</td>
+      <td>${assignment.member.address?.join('<br>')}</td>
+    </tr>
+  `;
+}).join('\n') + '</table>';
 }().catch(function (err) {
   console.error("Error:");
   console.error(err.stack || err.message || err);
