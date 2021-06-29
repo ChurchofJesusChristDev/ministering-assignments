@@ -158,7 +158,8 @@ CJCD = (function () {
         var opts = { credentials: "same-origin" };
         CJCD._images[id] = await fetch(mediumUrl, opts)
             .then(function (resp) {
-                return blobToDataURL(resp.blob());
+                let blob = await resp.blob();
+                return blobToDataURL(blob);
             })
             .catch(function (err) {
                 console.error(err);
