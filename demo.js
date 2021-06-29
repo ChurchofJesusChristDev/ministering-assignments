@@ -18,6 +18,10 @@
       });
     })
   );
+  
+  function $(sel, el) {
+    return (el || document.body).querySelector(sel);
+  }
 
   let data = JSON.parse($('script[type="application/json"]').innerText);
   console.info("Initial Page Load Data:");
