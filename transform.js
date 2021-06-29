@@ -134,12 +134,10 @@ CJCD = (function () {
         var profileUrl = `https://lcr.churchofjesuschrist.org/records/member-profile/service/${id}?lang=eng`;
         return fetch(profileUrl, {
             credentials: "same-origin",
-        }).then(function (resp) {
-            return resp.json().then(function (data) {
-                CJCD._profiles[id] = data;
-                // data.individual?.residentialAddress?.formattedLines
-                return CJCD._profiles[id];
-            });
+        }).then(async function (resp) {
+            CJCD._profiles[id] = await resp.json();
+            // data.individual?.residentialAddress?.formattedLines
+            return CJCD._profiles[id];
         });
     }
 
@@ -151,9 +149,14 @@ CJCD = (function () {
         var profileImageUrl = `https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-household/${id}?lang=eng&type=HOUSEHOLD`;
         var tokenUrl = await fetch(profileImageUrl, {
             credentials: "same-origin",
-        }).then(function (resp) {
-            return resp.json().image?.tokenUrl || "";
+        }).then(async function (resp) {
+            let data = await resp.json();
+            return data.image?.tokenUrl || "";
         });
+        if (!tokenUrl) {
+            return "";
+        }
+        
         var mediumUrl = `${tokenUrl}/MEDIUM`;
         var opts = { credentials: "same-origin" };
         CJCD._images[id] = await fetch(mediumUrl, opts)
