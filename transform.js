@@ -259,6 +259,10 @@ CJCD = (function () {
         });
     }
 
+    function $(sel, el) {
+      return (el || document.body).querySelector(sel);
+    }
+    
     return {
         _data: null,
         _cards: null,
