@@ -157,7 +157,7 @@ CJCD = (function () {
         var mediumUrl = `${tokenUrl}/MEDIUM`;
         var opts = { credentials: "same-origin" };
         CJCD._images[id] = await fetch(mediumUrl, opts)
-            .then(function (resp) {
+            .then(async function (resp) {
                 let blob = await resp.blob();
                 return blobToDataURL(blob);
             })
