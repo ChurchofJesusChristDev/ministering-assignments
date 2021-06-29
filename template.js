@@ -251,4 +251,10 @@ function createMessages(assignments) {
         .filter(Boolean);
 }
 
-module.exports = createMessages;
+if ('undefined' !== typeof module) {
+  module.exports = createMessages;
+}
+
+if ('undefined' !== typeof CJCD) {
+  CJCD.execTemplate = createMessages;
+}
