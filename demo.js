@@ -1,11 +1,12 @@
 (async function main() {
   'use strict';
 
+  let now = Date.now();
   await Promise.all(
     [
-      "https://churchofjesuschristdev.github.io/send-ministering-assignments/transform.js",
-      "https://churchofjesuschristdev.github.io/send-ministering-assignments/template.js",
-      "https://churchofjesuschristdev.github.io/send-ministering-assignments/email.js",
+      "https://churchofjesuschristdev.github.io/send-ministering-assignments/transform.js?" + now,
+      "https://churchofjesuschristdev.github.io/send-ministering-assignments/template.js?" + now,
+      "https://churchofjesuschristdev.github.io/send-ministering-assignments/email.js?" + now,
     ].map(function (src) {
       return new Promise(function (resolve, reject) {
         var script = document.createElement('script');
