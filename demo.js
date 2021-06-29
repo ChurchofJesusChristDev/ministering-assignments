@@ -42,19 +42,25 @@
     }, 2)
   );
   
-  document.body.innerHTML = '<table>' + CJCD.toJSON().map(function (assignment) {
-  return `
-    <tr>
-      <td><img src="${assignment.member.imageDataUrl}" width="100px" /></td>
-      <td>${assignment.member.nickname}</td>
-      <td>${assignment.member.age}</td>
-      <td>${assignment.member.gender}</td>
-      <td>${assignment.member.phone}</td>
-      <td>${assignment.member.email}</td>
-      <td>${assignment.member.address?.join('<br>')}</td>
-    </tr>
-  `;
-}).join('\n') + '</table>';
+  let div = $('.js-table');
+  if (!div) {
+    div = document.createElement('div');
+    div.classList.add('js-table');
+  }
+  div.innerHTML = '<table>' + CJCD.toJSON().map(function (assignment) {
+    return `
+      <tr>
+        <td><img src="${assignment.member.imageDataUrl}" width="100px" /></td>
+        <td>${assignment.member.nickname}</td>
+        <td>${assignment.member.age}</td>
+        <td>${assignment.member.gender}</td>
+        <td><a href="tel:${assignment.member.phone}">${assignment.member.phone}</a></td>
+        <td><a href="mailto:${assignment.member.email}">${assignment.member.email}</a></td>
+        <td>${assignment.member.address?.join('<br>')}</td>
+      </tr>
+    `;
+  }).join('\n') + '</table>';
+  document.body.prepend(div);
 }().catch(function (err) {
   console.error("Error:");
   console.error(err.stack || err.message || err);
