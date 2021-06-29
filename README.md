@@ -23,7 +23,7 @@ Here's the step-by-step overview:
 ## Demo
 
 1. Visit _Ministering Assignments_ at <https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ&tab=assigned>.
-2. <kbd>Cmd ⌘</kbd> + <kbd>Alt ⌥</kbd> + <kbd>i<kbd> to open the JavaScript console
+2. <kbd>Cmd ⌘</kbd> + <kbd>Alt ⌥</kbd> + <kbd>i</kbd> to open the JavaScript console
 3. Copy and paste this script
    ```js
    var script = document.createElement('script');
