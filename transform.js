@@ -282,12 +282,12 @@ CJCD = (function () {
             CJCD.organize();
 
             CJCD._cards = _cards || CJCD._cards || {};
+            CJCD._images = _images || CJCD._images || {};
+            CJCD._profiles = _profiles || CJCD._profiles || {};
+            
             if (!_cards) {
                 await CJCD.getCards();
             }
-
-            CJCD._images = _images || CJCD._images || {};
-            CJCD._profiles = _profiles || CJCD._profiles || {};
         },
         organize: organize,
         getPerson: getPerson,
