@@ -1,4 +1,4 @@
-(async function () {
+(async function main() {
   'use strict';
 
   await Promise.all(
@@ -32,4 +32,7 @@
   console.info(
     JSON.stringify(CJCD.toJSON(), null, 2)
   );
-}());
+}().catch(function (err) {
+  console.error("Error:");
+  console.error(err);
+}));
