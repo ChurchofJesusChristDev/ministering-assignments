@@ -13,7 +13,7 @@
         script.src =  src;
         //script.async = false;
         script.onload = resolve;
-        script.onload = reject;
+        script.onerror = reject;
         document.body.append(script);
       });
     })
