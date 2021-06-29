@@ -154,7 +154,7 @@ CJCD = (function () {
             let data = await resp.json();
             return data.image?.tokenUrl || "";
         });
-        if (!tokenUrl || 'images/nohousehold.svg' === tokenUrl) {
+        if (!tokenUrl || 'images/nohousehold.svg' === tokenUrl || 'images/nophoto.svg' === tokenUrl) {
             return "";
         }
         
