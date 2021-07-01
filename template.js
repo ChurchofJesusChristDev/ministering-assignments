@@ -15,7 +15,7 @@ function tmplMessage(p) {
         `,
         },
         minister: {
-            subject: "[Test] Updated Assignments",
+            subject: "Updated Assignments",
             html: `
             ${greetMinister(p.member)}
 
