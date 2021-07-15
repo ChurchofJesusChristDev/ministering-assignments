@@ -30,6 +30,11 @@ Here's the step-by-step overview:
    script.src="https://churchofjesuschristdev.github.io/send-ministering-assignments/demo.js";
    document.body.append(script);
    ```
+4. Wait for it to load, then view the JSON and Download
+   ```js
+   console.log(CJCD.toJSON());
+   CJCD.download('ministering.json', null, 2);
+   ```
 	
 **Security Notice**: Generally speaking it's a bad idea to run scripts from randos on the Internet.
 However, you can view the full contents of that script in this repository, and being that it's

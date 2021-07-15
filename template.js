@@ -251,10 +251,229 @@ function createMessages(assignments) {
         .filter(Boolean);
 }
 
+function initSqrl() {
+    Sqrl.filters.define("tel", CJCD.formatTel || CJCD._formatTel);
+    Sqrl.filters.define("addr", function (addr) {
+        return addr.slice(0,2).join("<br>")
+            // Direction names to single letter
+            .replace(/\bEast\b/i, 'E')
+            .replace(/\bWest\b/i, 'W')
+            .replace(/\bNorth\b/i, 'N')
+            .replace(/\bSouth\b/i, 'S')
+            // Common abbrevations and fixes
+            .replace(/\bBuilding\b/i, 'Bldg')
+            .replace(/\bApartment\b/i, 'Apt')
+            .replace(/\bUnit Unit\b/i, 'Unit')
+            .replace(/\bApt Apt\b/i, 'Apt')
+            // Utah-specific shorthand
+            .replace(/\bPleasant Grove\b/i, 'PG')
+            .replace(/\bSalt Lake City\b/i, 'SLC')
+            .replace(/\bUtah\b/i, 'UT')
+            // 9-digit zip to 5-digit zip
+            .replace(/\b(\d{5})-\d{4}\b/i, '$1');
+    });
+    Sqrl.filters.define("email", function (str) {
+      if (str.length <= 24) {
+        return str;
+      }
+      return str.split("@").join("<br><span style='float: right;'>@") + "</span>";
+    });
+    Sqrl.filters.define("name", function (str) {
+      return str.split(", ").reverse().join("<br>");
+    });
+    Sqrl.filters.define("first", function (str) {
+      return str.split(" ").shift();
+    });
+    Sqrl.filters.define("nbsp1", function (str) {
+      return '\xa0' + str;
+    });
+    Sqrl.filters.define("nbsp2", function (str) {
+      return '\xa0\xa0' + str;
+    });
+    Sqrl.filters.define("nbsp3", function (str) {
+      return '\xa0\xa0\xa0' + str;
+    });
+    Sqrl.filters.define("nbsp4", function (str) {
+      return '\xa0\xa0\xa0\xa0' + str;
+    });
+
+    //Sqrl.templates.define('greeting', Sqrl.compile(greetingMd));
+    Sqrl.templates.define('companions', Sqrl.compile(CJCD.templates.companions));
+    Sqrl.templates.define('assignments', Sqrl.compile(CJCD.templates.assignments));
+    Sqrl.templates.define('ministers', Sqrl.compile(CJCD.templates.ministers));
+    //Sqrl.templates.define('assignment', Sqrl.compile(CJCD.templates.assignment));
+}
+
+var max = '75px';
+var templates = {
+    // TODO use css variables
+    member: `
+        <tr>
+            <td class="pic">
+              {{@if(it.imageDataUrl)}}
+                <img src="{{ it.imageDataUrl }}" style="max-width: 75px; max-height: 75px;" />
+              {{#else}}
+                <div style="width: 75px;"></div>
+              {{/if}}
+            </td>
+            <td>{{ it.nickname | name | safe }}<br></td>
+            <td class="age">{{ m.age }}<br></td>
+            <td>{{ it.gender }}<br></td>
+            <td>{{ it.phone | tel }}<br></td>
+            <td>{{ it.address | addr | safe }}</td>
+            <td>{{ it.email | email | safe }}<br></td>
+        </tr>
+    `,
+    companions: `
+        <table>
+        <tr>
+            <td class="pic">
+                {{@if(it.member.imageDataUrl)}}
+                    <img src="{{ it.member.imageDataUrl }}" style="max-width:${max}; max-height:${max};" />
+                {{#else}}
+                    <div style="width: ${max}"></div>
+                {{/if}}
+            </td>
+            <td>{{ it.member.nickname }}<br></td>
+            <td class="age">{{ it.member.age }}<br></td>
+            <td>{{ it.member.gender }}<br></td>
+            <td>{{ it.member.phone | tel }}<br></td>
+            <td>{{ it.member.address | addr | safe }}</td>
+            <td>{{ it.member.email | email | safe }}<br></td>
+        </tr>
+        {{ @each(it.companions) => m }}
+        <tr>
+            <td class="pic">
+                {{@if(m.imageDataUrl)}}
+                    <img src="{{ m.imageDataUrl }}" style="max-width:${max}; max-height:${max};" />
+                {{#else}}
+                    <div style="width: ${max}"></div>
+                {{/if}}
+            </td>
+            <td>{{ m.nickname }}<br></td>
+            <td class="age">{{ m.age }}<br></td>
+            <td>{{ m.gender }}<br></td>
+            <td>{{ m.phone | tel }}<br></td>
+            <td>{{ m.address | addr | safe }}</td>
+            <td>{{ m.email | email | safe }}<br></td>
+        </tr>
+        {{/each}}
+        </table>
+    `,
+    assignments: `
+        <table>
+        {{ @each(it.assignments) => m }}
+        <tr>
+            <td class="pic">
+                {{@if(m.imageDataUrl)}}
+                    <img src="{{ m.imageDataUrl }}" style="max-width:${max}; max-height:${max};" />
+                {{#else}}
+                    <div style="width: ${max}"></div>
+                {{/if}}
+            </td>
+            <td>{{ m.nickname }}<br></td>
+            <td class="age">{{ m.age }}<br></td>
+            <td>{{ m.gender }}<br></td>
+            <td>{{ m.phone | tel }}<br></td>
+            <td>{{ m.address | addr | safe }}</td>
+            <td>{{ m.email | email | safe }}<br></td>
+        </tr>
+        {{/each}}
+        </table>
+    `,
+    ministers: `
+        <table>
+        {{ @each(it.ministers) => m }}
+        <tr>
+            <td class="pic">
+                {{@if(m.imageDataUrl)}}
+                    <img src="{{ m.imageDataUrl }}" style="max-width:${max}; max-height:${max};" />
+                {{#else}}
+                    <div style="width: ${max}"></div>
+                {{/if}}
+            </td>
+            <td>{{ m.nickname }}<br></td>
+            <td class="age">{{ m.age }}<br></td>
+            <td>{{ m.gender }}<br></td>
+            <td>{{ m.phone | tel }}<br></td>
+            <td>{{ m.address | addr | safe }}</td>
+            <td>{{ m.email | email | safe }}<br></td>
+        </tr>
+        {{/each}}
+        </table>
+    `,
+    assignment: `
+        <p><strong>{{ it.member.nickname }}</strong>'s Ministering Companionship:<br>
+        {{@include('companions', it) /}}
+
+        {{@if(it.assignments.length)}}
+            <p><strong>Families you minister to</strong>:<br>
+            {{@include('assignments', it) /}}
+        {{/if}}
+
+        {{@if(it.ministers.length)}}
+            <p>Who ministers to you:<br>
+            {{@include('ministers', it) /}}
+        {{/if}}
+    `,
+};
+
+function renderAssignment(assignment) {
+    return Sqrl.render(CJCD.templates.assignment, assignment);
+}
+
 if ('undefined' !== typeof module) {
   module.exports = createMessages;
 }
 
 if ('undefined' !== typeof CJCD) {
+  CJCD._loadStyles = async function (...hrefs) {
+    return await Promise.all(hrefs.map(CJCD._loadStyle));
+  };
+  CJCD._loadStyle = async function (href) {
+    return await new Promise(function (resolve, reject) {
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = href;
+      //link.async = false;
+      link.onload = resolve;
+      link.onerror = reject;
+      document.head.append(link);
+    });
+  }
+  CJCD.promise = Promise.resolve(CJCD.promise).then(async function () {
+      document.querySelectorAll('style,link[rel="stylesheet"]').forEach(function (el) { el.remove(); });
+      document.head = document.createElement('head');
+      //document.body = document.createElement('body');
+      await CJCD._loadStyles(
+          // MVP.css is a great option
+          "https://unpkg.com/mvp.css", // TODO version
+          // And so is new.css
+          //"https://fonts.xz.style/serve/inter.css",
+          //"https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css",
+      );
+  });
+  CJCD._loadScripts = async function (...srcs) {
+    return await Promise.all(srcs.map(CJCD._loadScript));
+  };
+  CJCD._loadScript = async function (src) {
+    return await new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = src;
+      //script.async = false;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.body.append(script);
+    });
+  }
+  CJCD.promise = Promise.resolve(CJCD.promise).then(async function () {
+      await CJCD._loadScripts(
+          "https://cdn.jsdelivr.net/npm/squirrelly@8.0.8/dist/browser/squirrelly.min.js",
+          "https://cdn.jsdelivr.net/npm/marked@2.1.3/marked.min.js",
+      )
+  }).then(initSqrl);
   CJCD.execTemplate = createMessages;
+  CJCD.templates = templates;
+  CJCD.renderAssignment = renderAssignment;
 }
