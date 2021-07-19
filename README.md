@@ -1,10 +1,10 @@
-# [Send Ministering Assignments](https://github.com/ChurchofJesusChristDev/send-ministering-assignments)
+# [Ministering Assignments](https://github.com/ChurchofJesusChristDev/ministering-assignments)
 
 Send a friend email for all assignments with plain-text contact information
 
 > Most people don't know where to check their ministering assignment,
 > and don't know when it has changed.
-> 
+>
 > We want to periodically send a church email (and eventually texts)
 > showing assignments in a simple way, and with a call to action.
 
@@ -27,7 +27,7 @@ Here's the step-by-step overview:
 3. Copy and paste this script
    ```js
    var script = document.createElement('script');
-   script.src="https://churchofjesuschristdev.github.io/send-ministering-assignments/demo.js";
+   script.src="https://churchofjesuschristdev.github.io/ministering-assignments/demo.js";
    document.body.append(script);
    ```
 4. Wait for it to load, then view the JSON and Download
@@ -35,7 +35,7 @@ Here's the step-by-step overview:
    console.log(CJCD.toJSON());
    CJCD.download('ministering.json', null, 2);
    ```
-	
+
 **Security Notice**: Generally speaking it's a bad idea to run scripts from randos on the Internet.
 However, you can view the full contents of that script in this repository, and being that it's
 encrypted with HTTPS, and hosted via Github, you have every reasonable assurance that the script
@@ -92,7 +92,7 @@ The format of the data in the HTML isn't ideal, but it's workable. Here's an abr
     "pageProps": {
       "initialState": {
         "ministeringData": {
-	
+
 	  //
 	  // misnomer: these are districts
 	  //
@@ -103,10 +103,10 @@ The format of the data in the HTML isn't ideal, but it's workable. Here's an abr
      	      "supervisorName": "Black, Sirius",
               "supervisorLegacyCmisId": 1000000005,
               "supervisorPersonUuid": "10000000-0000-4000-8000-000000000005",
-	      
+
 	      "companionships": [
 	        "id": "60000000-0000-4000-8000-000000000001",
-		
+
 		"ministers": [
                   {
                     "personUuid": "10000000-0000-4000-8000-000000000003",
@@ -124,7 +124,7 @@ The format of the data in the HTML isn't ideal, but it's workable. Here's an abr
                     "youthBasedOnAge": false
 		  }
 		],
-		
+
 		"assignments": [
                   {
 		    //
@@ -137,7 +137,7 @@ The format of the data in the HTML isn't ideal, but it's workable. Here's an abr
                     "youthBasedOnAge": false
                   }
 		],
-		
+
                 "recentlyChangedDate": "2021-06-01T06:00:00.000+0000",
                 "recentlyChangedDateInMilliseconds": 1622527200000
 	      ]
@@ -150,7 +150,7 @@ The format of the data in the HTML isn't ideal, but it's workable. Here's an abr
 }
 ```
 
-Take a look at the [Full Data Shape](https://github.com/ChurchofJesusChristDev/send-ministering-assignments/#shape-of-data) for more detail.
+Take a look at the [Full Data Shape](https://github.com/ChurchofJesusChristDev/ministering-assignments/#shape-of-data) for more detail.
 
 And this is how you can access it
 
@@ -173,13 +173,13 @@ If we want to omit the most garbage and get the most useful data only:
 console.log(
   JSON.stringify(
     {
-      props: { 
-        pageProps: { 
-          initialState: { 
+      props: {
+        pageProps: {
+          initialState: {
             ministeringData: {
               elders: data.props.pageProps.initialState.ministeringData.elders
             }
-          } 
+          }
         }
       }
     },
@@ -525,7 +525,7 @@ async function createMessages() {
                 msg += "</ul>";
                 msgs.push(msg);
             }
-	    
+
             if (Object.keys(p.companions).length > 0) {
                 isMinister = true;
                 let msg = "";

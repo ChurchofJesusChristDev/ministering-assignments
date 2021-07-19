@@ -18,9 +18,9 @@ async function sleep(delay = 100) {
   let now = Date.now();
   await Promise.all(
     [
-      "https://churchofjesuschristdev.github.io/send-ministering-assignments/transform.js?" + now,
-      "https://churchofjesuschristdev.github.io/send-ministering-assignments/template.js?" + now,
-      "https://churchofjesuschristdev.github.io/send-ministering-assignments/email.js?" + now,
+      "https://churchofjesuschristdev.github.io/ministering-assignments/transform.js?" + now,
+      "https://churchofjesuschristdev.github.io/ministering-assignments/template.js?" + now,
+      "https://churchofjesuschristdev.github.io/ministering-assignments/email.js?" + now,
     ].map(loadScript)
   );
 
