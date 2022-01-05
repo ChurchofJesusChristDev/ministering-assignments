@@ -52,6 +52,7 @@ CJCD = (function () {
     function formatMember(c) {
         return {
             id: c.id,
+            district: c.district,
             name: c.name,
             nickname: c.spokenName,
             age: c.age,
@@ -84,8 +85,7 @@ CJCD = (function () {
                     // this is a little imperfect for people in multiple companionships, but should work generally
 
                     ship.ministers.forEach(function (m, j) {
-                        // TODO where to put this?
-                        m._district = district.districtName;
+                        m.district = district.districtName;
 
                         //console.log("minister", j);
                         ids[m.legacyCmisId] = true;
