@@ -392,11 +392,11 @@ CJCD = (function () {
       return (el || document.body).querySelector(sel);
     }
 
-    function createDownloadAnchor(json, name, replacer, indent) {
+    function createDownloadAnchor(text, name) {
       // TODO https://stackoverflow.com/a/41553494/151312
       //var contentType = "text/json;charset=utf-8";
       var contentType = "application/octet-stream";
-      var dataStr = "data:" + contentType + "," + encodeURIComponent(JSON.stringify(json, replacer, indent));
+      var dataStr = "data:" + contentType + "," + encodeURIComponent(text);
       var a = document.createElement('a');
       a.setAttribute("href", dataStr);
       a.setAttribute("download", name);
@@ -404,7 +404,14 @@ CJCD = (function () {
     }
 
     function download(json, name, replacer, indent) {
-      var a = createDownloadAnchor(json, name, replacer, indent);
+      var text;
+      if ('string' === typeof json) {
+          text = json;
+      } else {
+          text = JSON.stringify(json, replacer, indent);
+      }
+        
+      var a = createDownloadAnchor(text, name);
       document.body.appendChild(a); // required for firefox
       a.click();
       a.remove();
