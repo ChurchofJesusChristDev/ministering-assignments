@@ -30,10 +30,16 @@ Here's the step-by-step overview:
    script.src="https://churchofjesuschristdev.github.io/ministering-assignments/demo.js";
    document.body.append(script);
    ```
-4. Wait for it to load, then view the JSON and Download
+4. Wait for it to load.
+5. JSON: You can view or Download the assignments as JSON:
    ```js
    console.log(CJCD.toJSON());
    CJCD.download('ministering.json', null, 2);
+   ```
+5. CSV: You can view or Download as CSV as well:
+   ```js
+   console.log(CJCD.toCSV());
+   CJCD.download('assignments.csv', null, 2);
    ```
 
 **Security Notice**: Generally speaking it's a bad idea to run scripts from randos on the Internet.
