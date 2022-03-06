@@ -310,7 +310,7 @@ CJCD = (function () {
           var mName = p.nickname || p.name;
           var mPhone = p.phone || p.email;
           var companions = [
-            [mName, mPhone].join(' ');
+            [mName, mPhone].join(' ')
           ];
           m.companions.forEach(function (c) {
             var name = c.nickname || c.name;
