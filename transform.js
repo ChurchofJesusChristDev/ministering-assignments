@@ -462,7 +462,11 @@ CJCD = (function () {
         toJSON: toJSON,
         toCSV: toCSV,
         download: function (name = 'ministering-assignments.json', replacer, indent) {
-          download(toJSON(), name, replacer, indent);
+          if (name.endsWith('.csv')) {
+            download(toCSV(), name, replacer, indent);
+          } else {
+            download(toJSON(), name, replacer, indent);
+          }
         },
     };
 })();
