@@ -265,6 +265,78 @@ CJCD = (function () {
 
         return assignment;
     }
+    
+    function toCSV() {
+        var exported = {};
+        var csv = [
+          [ "District", "Companions", "Families" ]
+        ];
+
+        var ships = [];
+        
+        var members = CJCD.toJSON();
+        members.forEach(function (m) {
+          var p = m.member
+
+          if (exported[p.id]) {
+            return;
+          }
+          exported[p.id] = true;
+
+          m.companions.forEach(function (c) {
+            if (exported[c.id]) {
+              return;
+            }
+            exported[c.id] = true;
+
+            ships.push(m);
+          });
+        });
+
+        ships.sort(function (a, b) {
+          if (a.district < b.district) {
+            return -1;
+          }
+          if (a.district > b.district) {
+            return 1;
+          }
+          return 0;
+        });
+
+        ships.forEach(function (m) {
+          var p = m.member
+          //console.log(m);
+
+          var mName = p.nickname || p.name;
+          var mPhone = p.phone || p.email;
+          var companions = [
+            [mName, mPhone].join(' ');
+          ];
+          m.companions.forEach(function (c) {
+            var name = c.nickname || c.name;
+            var phone = c.phone || c.email || '';
+            companions.push(
+              [name, phone].join(' ')
+            );
+          });
+          if (!m.assignments?.length) {
+            //console.log('skip');
+            return;
+          }
+
+          csv.push([
+            '"' + m.district + '"',
+            '"' + companions.join('\n') + '"',
+            '"' + m.assignments.map(function (a) {
+              return a.nickname || a.name;
+            }).join('\n') + '"',
+          ]);
+        });
+
+        return csv.map(function (row) {
+          return row.join('\t');
+        }).join('\n');
+    }
 
     function idToMember(id) {
         var p = CJCD.getPerson(id);
@@ -381,6 +453,7 @@ CJCD = (function () {
         getCards: getCards,
         getCachedCard: getCachedCard,
         toJSON: toJSON,
+        toCSV: toCSV,
         download: function (name = 'ministering-assignments.json', replacer, indent) {
           download(toJSON(), name, replacer, indent);
         },
