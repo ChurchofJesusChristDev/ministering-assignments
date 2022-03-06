@@ -85,12 +85,12 @@ CJCD = (function () {
                     // this is a little imperfect for people in multiple companionships, but should work generally
 
                     ship.ministers.forEach(function (m, j) {
-                        m.district = district.districtName;
-
                         //console.log("minister", j);
                         ids[m.legacyCmisId] = true;
 
                         var p = getPerson(m.legacyCmisId);
+                        p.district = district.districtName;
+                        
                         if (ship.ministers) {
                             ship.ministers.forEach(function (n) {
                                 if (m === n) {
