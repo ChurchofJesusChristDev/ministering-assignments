@@ -274,6 +274,7 @@ CJCD = (function () {
             throw new Error(`Error: invalid id '${id}'`);
         }
         var assignment = {
+            district: p.district,
             member: CJCD._formatMember(c),
             assignments: [],
             ministers: [],
@@ -311,7 +312,7 @@ CJCD = (function () {
     }
 
     function toJSON() {
-        var assignments = [];
+        // assignments
         return Object.keys(CJCD.ids).map(idToMember);
     }
 
